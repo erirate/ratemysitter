@@ -1,5 +1,7 @@
+"use client";
+
 import { Home, Search, Plus, User, Star, Settings } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 
 type NavVariant = "home" | "profile" | "claim";
 
@@ -8,8 +10,8 @@ interface BottomNavProps {
 }
 
 const BottomNav = ({ variant = "home" }: BottomNavProps) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const homeItems: { icon: typeof Home; label: string; path: string; isCenter?: boolean }[] = [
     { icon: Home, label: "Home", path: "/" },
@@ -38,11 +40,11 @@ const BottomNav = ({ variant = "home" }: BottomNavProps) => {
         {items.map((item, i) => (
           <button
             key={i}
-            onClick={() => navigate(item.path)}
+            onClick={() => router.push(item.path)}
             className={
               item.isCenter
                 ? "flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground -mt-5 shadow-lg"
-                : `flex flex-col items-center gap-0.5 px-3 py-1 text-muted-foreground hover:text-foreground transition-colors ${location.pathname === item.path ? "text-primary" : ""}`
+                : `flex flex-col items-center gap-0.5 px-3 py-1 text-muted-foreground hover:text-foreground transition-colors ${pathname === item.path ? "text-primary" : ""}`
             }
           >
             <item.icon className={item.isCenter ? "w-6 h-6" : "w-5 h-5"} />

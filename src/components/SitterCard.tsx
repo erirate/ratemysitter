@@ -1,15 +1,17 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { BadgeCheck } from "lucide-react";
 import StarRating from "./StarRating";
 import type { Sitter } from "@/data/mockData";
 
 const SitterCard = ({ sitter }: { sitter: Sitter }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const initials = sitter.name.split(" ").map((n) => n[0]).join("");
 
   return (
     <button
-      onClick={() => navigate(`/sitter/${sitter.id}`)}
+      onClick={() => router.push(`/sitter/${sitter.id}`)}
       className="bg-card rounded-lg p-4 shadow-sm border border-border text-left w-full hover:shadow-md transition-shadow"
     >
       <div className="flex items-start gap-3">
