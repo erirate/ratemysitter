@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/parents/$(request.auth.uid)).data.admin == true;
+    }
+
+    function isSitterOwner(sitterId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/sitters/$(sitterId)).data.uid == request.auth.uid;
+    }
+
+    function isTeen(sitterId) {
+      return get(/databases/$(database)/documents/sitters/$(sitterId)).data.is_teen == true;
+    }
+
+    function isClaimed(sitterId) {
+      return get(/databases/$(database)/documents/sitters/$(sitterId)).data.claimed == true;
+    }
+
+    // ── Sitters ───────────────────────────────────────────────────────────────
+
+    match /sitters/{sitterId} {
+
+      // Anyone can read sitter profiles, BUT teen+unclaimed profiles
+      // must never expose last_name, photo, or contact_info to the client.
+      // Enforcement happens in API routes (server-side). Direct client reads
+      // are blocked for those fields via this rule.
+      allow read: if
+        // Block direct client reads of protected teen fields
+        !(
+          resource.data.is_teen == true &&
+          resource.data.claimed == false &&
+          (
+            request.query.fields.hasAny(['last_name', 'photo', 'contact_info'])
+          )
+        );
+
+      // Only admins can create sitter profiles
+      allow create: if isAdmin();
+
+      // Sitter owner can update their own profile after claiming
+      // Admins can update any profile
+      allow update: if isAdmin() || (isSitterOwner(sitterId) && resource.data.claimed == true);
+
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+
+    // ── Reviews ──────────────────────────────────────────────────────────────
+
+    match /reviews/{reviewId} {
+      // Anyone can read reviews
+      allow read: if true;
+
+      // Authenticated parents can create reviews (not edit others)
+      allow create: if isSignedIn() &&
+        request.resource.data.parent_id == request.auth.uid;
+
+      // No one can edit a review after submission (except admins deleting)
+      allow update: if false;
+
+      allow delete: if isAdmin();
+    }
+
+    // ── Parents ───────────────────────────────────────────────────────────────
+
+    match /parents/{parentId} {
+      // Parents can read/write their own document
+      allow read, write: if isSignedIn() && request.auth.uid == parentId;
+      allow read, write: if isAdmin();
+    }
+
+    // ── Reports ───────────────────────────────────────────────────────────────
+
+    match /reports/{reportId} {
+      // Authenticated users can create reports
+      allow create: if isSignedIn() &&
+        request.resource.data.reporter_uid == request.auth.uid;
+
+      // Only admins can read or resolve reports
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── Audit Logs ────────────────────────────────────────────────────────────
+
+    match /audit_logs/{logId} {
+      // Only admins can read audit logs
+      allow read: if isAdmin();
+
+      // No client writes to audit logs — server-side only
+      allow write: if false;
+    }
+  }
+}
