@@ -11,19 +11,19 @@ const BottomNav = ({ variant = "home" }: BottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const homeItems = [
+  const homeItems: { icon: typeof Home; label: string; path: string; isCenter?: boolean }[] = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Search, label: "Search", path: "/" },
     { icon: Plus, label: "", path: "/review/new", isCenter: true },
     { icon: User, label: "Profile", path: "/" },
   ];
 
-  const profileItems = [
+  const profileItems: { icon: typeof Home; label: string; path: string; isCenter?: boolean }[] = [
     { icon: Search, label: "Search", path: "/" },
     { icon: User, label: "Profile", path: "/" },
   ];
 
-  const claimItems = [
+  const claimItems: { icon: typeof Home; label: string; path: string; isCenter?: boolean }[] = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Star, label: "Reviews", path: "/" },
     { icon: User, label: "Profile", path: "/" },
